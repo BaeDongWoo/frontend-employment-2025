@@ -1,7 +1,7 @@
 'use client';
-import { useInfiniteScroll } from '@/app/hooks/useInfiniteScroll';
 import { usePokemonData } from '@/app/hooks/usePokemon';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Spinner } from '../Spinner';
 
 interface PokemonType {
   name: string;
@@ -26,7 +26,7 @@ export const PokemonList = () => {
     }
     return () => observer && observer.disconnect();
   }, [infiniteScrollhandler]);
-
+  if (!hasNextPage) return <Spinner />;
   return (
     <>
       <div className="grid grid-cols-4 gap-4 max-w-[500px] m-auto">
@@ -38,7 +38,7 @@ export const PokemonList = () => {
         ))}
       </div>
       <div ref={targetRef} className="h-2"></div>
-      {isFetchingNextPage && <p>데이터 로딩 중...</p>}
+      {isFetchingNextPage && <Spinner />}
     </>
   );
 };
