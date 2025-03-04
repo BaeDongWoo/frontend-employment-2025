@@ -1,3 +1,9 @@
+import { PokemonList } from '@/app/components/pokemon/PokemonList';
+
 export default function Pokemon() {
-  return <></>;
+  return (
+    <div>
+      <PokemonList />
+    </div>
+  );
 }
