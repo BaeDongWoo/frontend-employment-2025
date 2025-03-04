@@ -1,5 +1,7 @@
 'use client';
+import { useInfiniteScroll } from '@/app/hooks/useInfiniteScroll';
 import { usePokemonData } from '@/app/hooks/usePokemon';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface PokemonType {
   name: string;
@@ -7,16 +9,36 @@ interface PokemonType {
 }
 
 export const PokemonList = () => {
-  const { data, isLoading } = usePokemonData(20, 0);
-  if (isLoading) return <p>데이터를 가져오는 중입니다!</p>;
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePokemonData();
+  const targetRef = useRef<HTMLDivElement>(null);
+  const observerFn = ([entries]: IntersectionObserverEntry[]) => {
+    if (entries?.isIntersecting && hasNextPage) {
+      fetchNextPage();
+    }
+  };
+  const infiniteScrollhandler: IntersectionObserverCallback = useCallback(observerFn, [fetchNextPage, hasNextPage]);
+
+  useEffect(() => {
+    let observer: IntersectionObserver;
+    if (targetRef.current) {
+      observer = new IntersectionObserver(infiniteScrollhandler, { threshold: 0.6 });
+      observer.observe(targetRef.current);
+    }
+    return () => observer && observer.disconnect();
+  }, [infiniteScrollhandler]);
+
   return (
-    <div className="grid grid-cols-4 gap-4 max-w-[500px] m-auto">
-      {data.map((pokemon: PokemonType) => (
-        <div key={pokemon.name} className="flex flex-col items-center">
-          <img src={pokemon.image} className="w-[120px] h-[160px] bg-gray-300 flex items-center justify-center" />
-          <div>{pokemon.name}</div>
-        </div>
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-4 gap-4 max-w-[500px] m-auto">
+        {data?.pages.flat().map((pokemon: PokemonType, index: number) => (
+          <div key={index} className="flex flex-col items-center">
+            <img src={pokemon.image} className="w-[120px] h-[160px] bg-gray-300 flex items-center justify-center" />
+            <div>{pokemon.name}</div>
+          </div>
+        ))}
+      </div>
+      <div ref={targetRef} className="h-2"></div>
+      {isFetchingNextPage && <p>데이터 로딩 중...</p>}
+    </>
   );
 };
