@@ -1,7 +1,7 @@
 'use client';
 import { usePokemonData } from '@/app/hooks/usePokemon';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { Spinner } from '../Spinner';
+import { useInfiniteScroll } from '@/app/hooks/useInfiniteScroll';
 
 interface PokemonType {
   name: string;
@@ -10,22 +10,8 @@ interface PokemonType {
 
 export const PokemonList = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = usePokemonData();
-  const targetRef = useRef<HTMLDivElement>(null);
-  const observerFn = ([entries]: IntersectionObserverEntry[]) => {
-    if (entries?.isIntersecting && hasNextPage) {
-      fetchNextPage();
-    }
-  };
-  const infiniteScrollhandler: IntersectionObserverCallback = useCallback(observerFn, [fetchNextPage, hasNextPage]);
+  const targetRef = useInfiniteScroll({ fetchNextPage, hasNextPage });
 
-  useEffect(() => {
-    let observer: IntersectionObserver;
-    if (targetRef.current) {
-      observer = new IntersectionObserver(infiniteScrollhandler, { threshold: 0.6 });
-      observer.observe(targetRef.current);
-    }
-    return () => observer && observer.disconnect();
-  }, [infiniteScrollhandler]);
   if (!hasNextPage) return <Spinner />;
   return (
     <>
