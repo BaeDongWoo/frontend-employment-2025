@@ -1,15 +1,20 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
-const getPokemonData = async (limit: number, offset: number) => {
-  const { data } = await axios.get(`/api/pokemon?limit=${limit}&offset=${offset}`);
+const getPokemonData = async ({ pageParam = 0 }) => {
+  const { data } = await axios.get(`/api/pokemon?limit=20&offset=${pageParam}`);
   return data;
 };
 
-const usePokemonData = (limit: number, offset: number) => {
-  return useQuery({
-    queryKey: ['pokemonList', limit, offset],
-    queryFn: () => getPokemonData(limit, offset),
+const usePokemonData = () => {
+  return useInfiniteQuery({
+    queryKey: ['pokemonList'],
+    queryFn: getPokemonData,
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < 20) return undefined;
+      return allPages.length * 20;
+    },
   });
 };
 
